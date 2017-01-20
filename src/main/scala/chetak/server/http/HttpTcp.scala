@@ -50,7 +50,7 @@ class HttpTcp(services: List[HttpService]) extends TcpProtocol {
   }
 
   def debug(str: String) = {
-    println(str)
+    //println(str)
   }
 
   var count = 0
