@@ -28,9 +28,8 @@ Currently basic NIO/Http server, JSON Parser, Http Parser and Builder, Http Requ
 Chetak was the war-horse of Maharana Pratap, whom Pratap rode during the Battle of Haldighati, June 21, 1576. Pratap and Chetak attacked war elephant of opponent commander head-on in order to kill him. Chetak died in this battle after leaving Pratap out of danger after the failed attack and since. Chetak has been immortalized in the ballads of Rajasthan.
 
 ### TODOs
-
-- Add implicits in httpRequest matcher
-- Add a sample service
+- Write sample service using httpRequestMatcher - KeyValueService
+- Add Http Request body types - FormBody and JSON Body
 - Add keep-alive support in http
 - Add content-types in http
 - Add content encodings, media types, url encodings, 

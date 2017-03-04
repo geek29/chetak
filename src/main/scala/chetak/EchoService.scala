@@ -16,6 +16,6 @@ object EchoService extends HttpService {
     Http.build(HttpStatusCodes.OK, StringBody("Hello World!"), req)
   }
 
-  override def routes: List[HttpRequestMatch] = List(path("/echo", List(post()(echo), get()(helloWorld))))
+  override def routes: List[HttpRequestMatch] = List(path("/echo", List(post(echo), get(helloWorld))))
 
 }

@@ -2,6 +2,8 @@ package chetak.server.http
 
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.collection.mutable
+
 /**
   * Created by tushark on 15/1/17.
   */
@@ -116,6 +118,28 @@ class HttpRequestMatcherSpec extends FlatSpec with Matchers {
     val request = HttpRequest(RequestLine(HttpMethod.GET, "/cgi-bin/process.cgi", HttpVersion.VERSION_1_1, None), List(), Some(StringBody("")))
     val resp = HttpRequestMatcher.matchRequest(List(route), request)
     resp.status should be (HttpStatusCodes.InternalServerError)
+  }
+
+  it should "return query parameters in type safe maneer" in {
+    val paramMap = mutable.HashMap[String, String]()
+    paramMap.put("intParam", "1")
+    paramMap.put("boolParam", "false")
+    paramMap.put("floatParam", "2.345")
+    val request = HttpRequest(RequestLine(HttpMethod.GET, "/cgi-bin/process.cgi?", HttpVersion.VERSION_1_1, Some(paramMap)), List(), Some(StringBody("")))
+
+    HttpRequestMatcher.queryParam[Int](request, "intParam", -1) should be(Some(1))
+    HttpRequestMatcher.queryParam[Boolean](request, "boolParam", true) should be(Some(false))
+    HttpRequestMatcher.queryParam(request, "floatParam", 0.0f) should be(Some(2.345f))
+  }
+
+  it should "return path parameters in type safe manner" in {
+    val DRIVER_ID_REGEX = "\\/drivers\\/([\\d]+)\\/location"
+    val request = HttpRequest(RequestLine(HttpMethod.GET, "/drivers/5673/location", HttpVersion.VERSION_1_1, None), List(), Some(StringBody("")))
+    HttpRequestMatcher.pathParam[Int](request, DRIVER_ID_REGEX) should be(Some(5673))
+
+    val request2 = HttpRequest(RequestLine(HttpMethod.GET, "/drivers/false/location", HttpVersion.VERSION_1_1, None), List(), Some(StringBody("")))
+    HttpRequestMatcher.pathParam[Boolean](request2, DRIVER_ID_REGEX) should be(Some(false))
+    HttpRequestMatcher.pathParam(request2, DRIVER_ID_REGEX, true) should be(Some(false))
   }
 
 

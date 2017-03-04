@@ -49,6 +49,10 @@ object HttpRequestMatcher {
       req.requestLine.method.equals(HttpMethod.POST)
     }, children, handler)
 
+  def post(handler: RequestHandler): HttpRequestMatch = post(List())(handler)
+
+  def get(handler: RequestHandler): HttpRequestMatch = get(List())(handler)
+
   def debug(str : String) = {
     //println(str)
   }
@@ -152,10 +156,31 @@ object HttpRequestMatcher {
   }
 
   import scala.reflect.runtime.universe._
+
+  def pathParam[T : TypeTag](req: HttpRequest, pattern: String, default: T) : Option[T] = {
+    pattern.r.findFirstMatchIn(req.requestLine.uri) match {
+      case Some(x) =>
+        val group = x.group(1)
+        typeOf[T] match {
+          case t if t =:= typeOf[String] =>
+            Some(group).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Int] =>
+            Some(group.toInt).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Double] =>
+            Some(group.toDouble).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Boolean] =>
+            Some(group.toBoolean).asInstanceOf[Option[T]]
+        }
+      case None => Some(default)
+    }
+  }
+
   def pathParam[T : TypeTag](req: HttpRequest, pattern: String) : Option[T] = {
      pattern.r.findFirstMatchIn(req.requestLine.uri).map { x =>
       val group = x.group(1)
       typeOf[T] match {
+        case t if t =:= typeOf[String] =>
+          Some(x).asInstanceOf[T]
         case t if t =:= typeOf[Int] =>
           Some(group.toInt).asInstanceOf[T]
         case t if t =:= typeOf[Double] =>
@@ -166,9 +191,28 @@ object HttpRequestMatcher {
     }
   }
 
+  def queryParam[T : TypeTag](req: HttpRequest, str: String, default: T) : Option[T] = {
+    req.requestLine.queryParams.get.get(str) match {
+      case Some(x) =>
+        typeOf[T] match {
+          case t if t =:= typeOf[String] =>
+            Some(x).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Int] =>
+            Some(x.toInt).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Double] =>
+            Some(x.toDouble).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Float] =>
+            Some(x.toFloat).asInstanceOf[Option[T]]
+          case t if t =:= typeOf[Boolean] =>
+            Some(x.toBoolean).asInstanceOf[Option[T]]
+        }
+      case None => Some(default)
+    }
+  }
+
 
   def pathParamInt(req: HttpRequest, pattern: String) : Option[Int] = {
-    pattern.r.findFirstMatchIn(req.requestLine.uri)map { x => x.group(1).toInt }
+    pattern.r.findFirstMatchIn(req.requestLine.uri).map { x => x.group(1).toInt }
   }
 
 
