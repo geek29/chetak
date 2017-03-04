@@ -19,5 +19,33 @@ package object json {
   case class JObject(obj: List[JField]) extends JValue
   case class JArray(arr: List[JValue]) extends JValue
 
+  case class JsonPath(list: List[String]) {
+    def /(next: String) : JsonPath = JsonPath(next :: list)
+  }
+
+  val JSONROOT = JsonPath(List[String]())
+
+  def jsonQuery(json: JValue, path: JsonPath): Option[JValue] = _jsonQuery(json, JsonPath(path.list.reverse))
+
+  def _jsonQuery(json: JValue, path: JsonPath): Option[JValue] = {
+    //println(s"querying for ${path.list} on ${json}")
+    path.list match {
+      case head :: tail =>
+        json match {
+          case jobj: JObject =>
+            //println(s"Finding $head")
+            jobj.obj.find( _._1 == head) match {
+              case Some(f) =>
+                _jsonQuery(f._2, JsonPath(tail))
+              case None =>
+                None
+            }
+          case _ => throw new RuntimeException(s"Reached leaf level. No object at ${path} path")
+        }
+      case Nil =>
+        Some(json)
+    }
+  }
+
 
 }
