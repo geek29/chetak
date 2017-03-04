@@ -123,6 +123,7 @@ object JSON {
       case k:JInt => sb.append(k.num)
       case k:JObject => sb.append(json(k))
       case k:JArray => sb.append(json(k))
+      case _ =>
     }
     sb.toString()
   }

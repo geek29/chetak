@@ -1,5 +1,6 @@
 package chetak.server.http
 
+import chetak.json.{JObject, JString}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -18,6 +19,19 @@ class HttpParseSpec extends FlatSpec with Matchers {
     CRLF + 	"Connection: Keep-Alive" +
     CRLF +
     CRLF + "licenseID=string&content=string&/paramsXML=string" +
+    CRLF
+
+
+  val jsonRequest = "POST /cgi-bin/process.cgi?param=1&&parm2=1233 HTTP/1.1" +
+    CRLF + "User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" +
+    CRLF + 	"Host: www.tutorialspoint.com" +
+    CRLF + 	"Content-Type: application/json" +
+    CRLF + 	"Content-Length: 62" +
+    CRLF + 	"Accept-Language: en-us" +
+    CRLF + 	"Accept-Encoding: gzip, deflate" +
+    CRLF + 	"Connection: Keep-Alive" +
+    CRLF +
+    CRLF + "{\"licenseID\":\"string\",\"content\":\"string\",\"paramsXML\":\"string\"}" +
     CRLF
 
 
@@ -46,11 +60,24 @@ class HttpParseSpec extends FlatSpec with Matchers {
     request.requestLine.queryParams.get.valueAt("parm2") should equal ("1233")
   }
 
-  it should "return body as whole as context-types are not supported yet" in {
+  it should "return body as whole as context-type form encoded are not supported yet" in {
     val request = Http.parse(request1)
     request.body should be (defined)
     val body = "licenseID=string&content=string&/paramsXML=string\r\n"
     request.body.get.string() should be (body)
+  }
+
+  it should "parse body as json when content type is specified as application/json" in {
+    val request = Http.parse(jsonRequest)
+    request.body should be (defined)
+    val ct = request.headers.find(_.name == (HttpHeaders.CONTENT_TYPE))
+    ct should be (defined)
+    ct.get.value should be (MediaTypes.APPLICATION_JSON)
+    val body = JSONBody(JObject(List(
+      ("licenseID" -> JString("string")),
+      ("content"-> JString("string")),
+      ("paramsXML"-> JString("string")))))
+    request.body.get should be (body)
   }
 
   "HttpResponse" should "generate valid tostring payload" in {

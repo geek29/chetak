@@ -45,7 +45,17 @@ object Http {
   val HEADER_VALUE_PATTERN = ": ".r
 
 
-
+  def parseRequestBody(headers: Array[HttpHeader], body: String): HttpBody = {
+    headers.find( _.name == (HttpHeaders.CONTENT_TYPE)) match {
+      case Some(contentType) =>
+        contentType.value.toLowerCase match {
+          case MediaTypes.APPLICATION_JSON =>
+            JSONBody(JSON.parseObject(body))
+          case _ => StringBody(body)
+        }
+      case None => StringBody(body)
+    }
+  }
 
   def parse(request: String) : HttpRequest = /*Future */{
     val headersAndBody = RAW_VALUE_PATTERN.split(request)
@@ -66,7 +76,7 @@ object Http {
       case "HTTP/1.0" => HttpVersion.VERSION_1_0
     }
     val queryParamters = parseParams(requestLineSplit(1))
-    HttpRequest(RequestLine(method, path, version, queryParamters), headers, Some(new StringBody(headersAndBody(1))))
+    HttpRequest(RequestLine(method, path, version, queryParamters), headers, Some(parseRequestBody(headers, headersAndBody(1))))
   }
 
   //TODO currently Dummy
@@ -192,6 +202,15 @@ object HttpStatusCodes {
   val NotImplemented = HttpStatusCode(501, "Not Implemented")
   val ServiceUnavailable = HttpStatusCode(503, "Service Unavailable")
   val HTTPVersionNotSupported = HttpStatusCode(505, "HTTP Version Not Supported")
+}
+
+object HttpHeaders {
+  val CONTENT_TYPE = "content-type"
+  val CHARSET = "charset"
+}
+
+object MediaTypes {
+  val APPLICATION_JSON = "application/json"
 }
 
 
